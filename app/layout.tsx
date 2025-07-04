@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google"
 import "./globals.css";
 import Header from "@/components/Header";
-import { ClerkProvider, SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, } from "@clerk/nextjs"
+import { ClerkProvider} from "@clerk/nextjs"
 
 const inter = Inter({ subsets: ["latin"]})
 
 export const metadata: Metadata = {
-  title: "AI Finance Platform",
+  title: "AI Finance Management Platform",
   description: "One stop fincance platform",
 };
 
