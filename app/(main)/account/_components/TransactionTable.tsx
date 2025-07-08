@@ -53,11 +53,13 @@ const TransactionTable = ({ transactions }: {transactions: any}) => {
 
   const router = useRouter();
 
-  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedIds, setSelectedIds] = useState<any[]>([]);
   const [sortConfig, setSortConfig] = useState({
     field: "date",
     direction: "desc",
   })
+
+//   console.log(selectedIds);
 
   const filteredAndSortedTransactions = transactions;
 
@@ -68,14 +70,18 @@ const TransactionTable = ({ transactions }: {transactions: any}) => {
     }))
   }
 
-//   const handleSelect = (id: any) => {
-//     setSelectedIds(current => current.includes(id) 
-//     ? current.filter(item => item!=id) 
-//     : [...current, id])
-//   }
+  const handleSelect = (id: any) => {
+    setSelectedIds(current => current.includes(id) 
+    ? current.filter(item => item!=id) 
+    : [...current, id])
+  }
 
-  const handleSelectAll = (id: string) => {
-
+  const handleSelectAll = () => {
+    setSelectedIds((current) => 
+        current.length === filteredAndSortedTransactions.length 
+        ? []
+        : filteredAndSortedTransactions.map((t: Transaction) => t.id)
+    )
   }
 
   return (
@@ -88,7 +94,14 @@ const TransactionTable = ({ transactions }: {transactions: any}) => {
                 <TableHeader>
                     <TableRow>
                     <TableHead className="w-[50px]">
-                        <Checkbox />
+                        <Checkbox 
+                            onCheckedChange={handleSelectAll} 
+                            checked={
+                                selectedIds.length === 
+                                    filteredAndSortedTransactions.length &&
+                                    filteredAndSortedTransactions.length > 0
+                            }
+                        />
                     </TableHead>
                     <TableHead 
                         className="cursor-pointer"
@@ -143,7 +156,12 @@ const TransactionTable = ({ transactions }: {transactions: any}) => {
                     ): (
                         filteredAndSortedTransactions.map((transaction: Transaction) => (
                             <TableRow key={transaction.id}>
-                            <TableCell> <Checkbox /> </TableCell>
+                            <TableCell> 
+                                <Checkbox 
+                                    onCheckedChange={() => handleSelect(transaction.id)} 
+                                    checked={selectedIds.includes(transaction.id)}
+                                /> 
+                            </TableCell>
                             <TableCell> {format(new Date(transaction.date), "PP")} </TableCell>
                             <TableCell> {transaction.description} </TableCell>
                             <TableCell className="capitalize"> 
