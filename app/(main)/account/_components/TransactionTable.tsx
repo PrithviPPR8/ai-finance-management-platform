@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -72,7 +72,19 @@ const TransactionTable = ({ transactions }: {transactions: any}) => {
   const [typeFilter, setTypeFilter] = useState("");
   const [recurringFilter, setRecurringFilter] = useState("");
 
-  const filteredAndSortedTransactions = transactions;
+  const filteredAndSortedTransactions = useMemo(() => {
+    let result = [...transactions];
+
+    //Apply search filter
+    if(searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        result = result.filter((transaction) => 
+            transaction.description?.toLowerCase().includes(searchLower)
+        )
+    }
+
+    return result;
+  }, [transactions, searchTerm, typeFilter, recurringFilter, sortConfig])
 
   const handleSort = (field: any) => {
     setSortConfig(current => ({
