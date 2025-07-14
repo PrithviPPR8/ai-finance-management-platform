@@ -93,3 +93,70 @@ export async function getAccountWithTransactions(accountId: string) {
         transactions: account.transactions.map(serializeTransaction),
     }
 }
+
+export async function bulkDeleteTransactions(transactionIds: any) {
+    try {
+        const { userId } = await auth();
+        
+        if(!userId) throw new Error ("Unauthorized");
+            
+        const user = await db.user.findUnique({
+            where: { clerkUserId: userId }
+        })
+            
+        if(!user) throw new Error ("User not found");
+
+        const transactions = await db.transaction.findMany({
+            where: {
+                id: { in: transactionIds },
+                userId: user.id,
+            },
+        })
+
+        const accountBalanceChanges = transactions.reduce((acc, transaction) => {
+            const change = transaction.type === "EXPENSE" ? transaction.amount : -transaction.amount;
+            
+            acc[transaction.accountId] = (acc[transaction.accountId] || 0) + change;
+
+            return acc;
+        }, {});
+
+        //Delete the transactions and update the account balance
+        await db.$transaction(async (tx) => {
+            //Delete transactions
+            await tx.transaction.deleteMany({
+                where: {
+                    id: { in: transactionIds },
+                    userId: user.id,
+                }
+            })
+
+            for (const [accountId, balanceChange] of Object.entries(
+                accountBalanceChanges
+            )) {
+                await tx.account.update ({
+                    where: { id: accountId },
+                    data: {
+                        balance: {
+                            increment: balanceChange,
+                        },
+                    },
+                })
+            }
+        })
+
+        revalidatePath("/dashboard");
+        revalidatePath("/account/[id]");
+
+        return { success: true };
+
+    } catch (error) {
+
+        if(error instanceof Error){
+            console.log(error.message);
+        }
+
+        return { success: false }
+    }
+
+}

@@ -51,6 +51,7 @@ const AccountsPage: React.FC<AccountsPageProps> = async ({ params }) => {
       </div>
 
       {/* Chart Section */}
+      
 
       {/* Transaction Table */}
       <Suspense

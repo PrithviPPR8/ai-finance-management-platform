@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -37,6 +37,10 @@ import { ChevronDown, ChevronUp, Clock, MoreHorizontal, RefreshCw, Search, Trash
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import useFetch from "@/hooks/useFetch";
+import { bulkDeleteTransactions } from "@/actions/accounts";
+import { toast } from "sonner";
+import { BarLoader } from "react-spinners";
 
 type Transaction = {
   id: string;
@@ -71,6 +75,12 @@ const TransactionTable = ({ transactions }: {transactions: any}) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [recurringFilter, setRecurringFilter] = useState("");
+
+  const {
+    loading: deleteLoading,
+    fn: deleteFn,
+    data: deleted,
+  } = useFetch(bulkDeleteTransactions);
 
   const filteredAndSortedTransactions = useMemo(() => {
     let result = [...transactions];
@@ -140,9 +150,21 @@ const TransactionTable = ({ transactions }: {transactions: any}) => {
     )
   }
   
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
+    if(!window.confirm(
+        `Are you sure you want to delete ${selectedIds.length} transactions?`
+    )) {
+        return;
+    }
 
+    deleteFn(selectedIds);
   }
+
+  useEffect(() => {
+    if(deleted && !deleteLoading) {
+        toast.error("Transactions deleted successfully");
+    }
+  }, [deleted, deleteLoading])
 
   const handleClearFilters = () => {
     setSearchTerm("");
@@ -153,6 +175,8 @@ const TransactionTable = ({ transactions }: {transactions: any}) => {
 
   return (
     <div className="space-y-4">
+    { deleteLoading && <BarLoader className="mt-4" width={"100%"} color="#9333ea" /> }
+
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
@@ -336,15 +360,15 @@ const TransactionTable = ({ transactions }: {transactions: any}) => {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                        <DropdownMenuLabel onClick={() => router.push(
+                                        <DropdownMenuItem onClick={() => router.push(
                                             `/transaction/create?edit=${transaction.id}`
                                         )}>
                                             Edit
-                                        </DropdownMenuLabel>
+                                        </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem 
                                             className="text-destructive"
-                                            // onClick={() => deleteFn([transaction.id])}
+                                            onClick={() => deleteFn([transaction.id])}
                                         >
                                             Delete
                                         </DropdownMenuItem>
