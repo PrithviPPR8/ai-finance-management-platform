@@ -2,12 +2,7 @@ import HeroSection from "@/components/Hero";
 import { featuresData, howItWorksData, statsData, testimonialsData } from "@/data/landing.js"
 import {
   Card,
-  CardAction,
   CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import Image from "next/image";
 import Link from "next/link";
