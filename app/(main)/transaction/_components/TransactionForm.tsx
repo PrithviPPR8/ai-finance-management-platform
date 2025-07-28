@@ -108,6 +108,8 @@ const AddTransactionForm = ({
     } else {
       transactionFn(undefined, formData);
     }
+
+    // console.log(data);
   };
 
   useEffect(() => {
