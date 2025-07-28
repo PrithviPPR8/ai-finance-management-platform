@@ -10,6 +10,10 @@ type Transaction = {
     [key: string]: any; // Allows other properties
 };
 
+interface AccountBalanceChanges {
+    [accountId: string]: number;
+}
+
 const serializeTransaction = (obj: Transaction) => {
     const serialized = { ...obj };
 
@@ -113,11 +117,13 @@ export async function bulkDeleteTransactions(transactionIds: any) {
             },
         })
 
-        const accountBalanceChanges = transactions.reduce((acc, transaction) => {
-            const change = transaction.type === "EXPENSE" ? transaction.amount : -transaction.amount;
-            
+        const accountBalanceChanges = transactions.reduce<AccountBalanceChanges>((acc, transaction) => {
+            // Convert amount to number if it's a Decimal
+            const amount = typeof transaction.amount === "number"
+                ? transaction.amount
+                : transaction.amount.toNumber();
+            const change = transaction.type === "EXPENSE" ? amount : -amount;
             acc[transaction.accountId] = (acc[transaction.accountId] || 0) + change;
-
             return acc;
         }, {});
 

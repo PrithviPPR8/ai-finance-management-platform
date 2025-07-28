@@ -17,12 +17,25 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-const DATE_RANGES = {
-    "7D": { label: "Last 7 Days", days: 7 },
-    "1M": { label: "Last Month", days: 30 },
-    "3M": { label: "Last 3 Months", days: 90 },
-    "6M": { label: "Last 6 Months", days: 180 },
-    ALL: { label: "All Time", days: null },
+export type DateRangeKey = '7D' | '1M' | '3M' | '6M' | 'ALL';
+
+export const DATE_RANGES: Record<DateRangeKey, { label: string; days: number }> = {
+  '7D': { label: 'Last 7 Days', days: 7 },
+  '1M': { label: 'Last Month', days: 30 },
+  '3M': { label: 'Last 3 Months', days: 90 },
+  '6M': { label: 'Last 6 Months', days: 180 },
+  'ALL': { label: 'All Time', days: 0 },
+};
+
+// 2. Type totals
+type Totals = {
+  income: number;
+  expense: number;
+};
+
+interface AccountChartProps {
+  totals: Totals;
+  // ...other props...
 }
 
 
@@ -61,13 +74,13 @@ const AccountChart = ({ transactions }: { transactions: any }) => {
 
     // Convert to array and sort by date
     return Object.values(grouped).sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
+      (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()
     )
   }, [transactions, dateRange])
 
   // console.log(filteredData);
 
-  const totals = useMemo(() => {
+  const totals: Totals = useMemo(() => {
     return filteredData.reduce(
       (acc: any, day: any) => ({
         income: acc.income + day.income,
@@ -86,11 +99,11 @@ const AccountChart = ({ transactions }: { transactions: any }) => {
             <SelectValue placeholder="Select Range" />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(DATE_RANGES).map(([key, { label }]) => {
-              return <SelectItem key={key} value={key}>
+            {(Object.entries(DATE_RANGES) as [DateRangeKey, { label: string; days: number }][]).map(([key, { label }]) => (
+              <SelectItem key={key} value={key}>
                 {label}
               </SelectItem>
-            })}
+            ))}
           </SelectContent>
         </Select>
       </CardHeader>

@@ -12,6 +12,7 @@ interface Account {
   name: string;
   type: string;
   balance: number | string;
+  isDefault: boolean;
 }
 
 const DashboardPage = async () => {
