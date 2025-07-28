@@ -42,7 +42,7 @@ export function AddTransactionForm({
   categories,
   editMode = false,
   initialData = null,
-}) {
+}: AddTransactionFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
