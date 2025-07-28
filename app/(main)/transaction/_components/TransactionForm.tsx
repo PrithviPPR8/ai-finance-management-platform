@@ -37,25 +37,28 @@ interface AddTransactionFormProps {
   initialData: any,
 }
 
-const AddTransactionForm = ({ 
-  accounts, 
-  categories, 
-  editMode = false, 
+export function AddTransactionForm({
+  accounts,
+  categories,
+  editMode = false,
   initialData = null,
-}: AddTransactionFormProps) => {
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
 
-  const { 
-    register, 
-    setValue, 
-    handleSubmit, 
-    formState: {errors}, 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
     watch,
+    setValue,
     getValues,
     reset,
   } = useForm({
     resolver: zodResolver(transactionSchema),
-    defaultValues: 
-    editMode && initialData
+    defaultValues:
+      editMode && initialData
         ? {
             type: initialData.type,
             amount: initialData.amount.toString(),
@@ -76,7 +79,7 @@ const AddTransactionForm = ({
             date: new Date(),
             isRecurring: false,
           },
-  })
+  });
 
   const {
     loading: transactionLoading,
@@ -84,20 +87,7 @@ const AddTransactionForm = ({
     data: transactionResult,
   } = useFetch(editMode ? updateTransaction : createTransaction);
 
-  const type = watch("type");
-  const isRecurring = watch("isRecurring");
-  const date = watch("date");
-
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const editId = searchParams.get("edit");
-
   const onSubmit = (data: any) => {
-    if (!data.accountId) {
-      toast.error("Please select an account before submitting.");
-      return;
-    }
-
     const formData = {
       ...data,
       amount: parseFloat(data.amount),
@@ -106,27 +96,9 @@ const AddTransactionForm = ({
     if (editMode) {
       transactionFn(editId, formData);
     } else {
-      transactionFn(undefined, formData);
+      transactionFn(formData);
     }
-
-    // console.log(data);
   };
-
-  useEffect(() => {
-    if (transactionResult?.success && !transactionLoading) {
-      toast.success(
-        editMode
-          ? "Transaction updated successfully"
-          : "Transaction created successfully"
-      );
-      reset();
-      router.push(`/account/${transactionResult.data.accountId}`);
-    }
-  }, [transactionResult, transactionLoading, editMode]);
-
-  const filteredCategories = categories.filter(
-    (category: any) => category.type === type
-  )
 
   const handleScanComplete = (scannedData: any) => {
     if (scannedData) {
@@ -142,9 +114,29 @@ const AddTransactionForm = ({
     }
   };
 
+  useEffect(() => {
+    if (transactionResult?.success && !transactionLoading) {
+      toast.success(
+        editMode
+          ? "Transaction updated successfully"
+          : "Transaction created successfully"
+      );
+      reset();
+      router.push(`/account/${transactionResult.data.accountId}`);
+    }
+  }, [transactionResult, transactionLoading, editMode]);
+
+  const type = watch("type");
+  const isRecurring = watch("isRecurring");
+  const date = watch("date");
+
+  const filteredCategories = categories.filter(
+    (category: any) => category.type === type
+  );
+
   return (
-    <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-      {/* AI Recipt Scanner */}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Receipt Scanner - Only show in create mode */}
       {!editMode && <ReceiptScanner onScanComplete={handleScanComplete} />}
 
       {/* Type */}
@@ -154,15 +146,14 @@ const AddTransactionForm = ({
           onValueChange={(value) => setValue("type", value)}
           defaultValue={type}
         >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select Type" />
+          <SelectTrigger>
+            <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="EXPENSE">EXPENSE</SelectItem>
-            <SelectItem value="INCOME">INCOME</SelectItem>
+            <SelectItem value="EXPENSE">Expense</SelectItem>
+            <SelectItem value="INCOME">Income</SelectItem>
           </SelectContent>
         </Select>
-
         {errors.type?.message && typeof errors.type.message === "string" && (
           <p className="text-sm text-red-500">{errors.type.message}</p>
         )}
@@ -172,13 +163,12 @@ const AddTransactionForm = ({
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
           <label className="text-sm font-medium">Amount</label>
-          <Input 
+          <Input
             type="number"
-            step={"0.01"}
+            step="0.01"
             placeholder="0.00"
             {...register("amount")}
           />
-
           {errors.amount?.message && typeof errors.amount.message === "string" && (
             <p className="text-sm text-red-500">{errors.amount.message}</p>
           )}
@@ -191,7 +181,7 @@ const AddTransactionForm = ({
             defaultValue={getValues("accountId")}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select Account" />
+              <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
               {accounts.map((account: any) => (
@@ -200,16 +190,15 @@ const AddTransactionForm = ({
                 </SelectItem>
               ))}
               <CreateAccountDrawer>
-                <Button 
+                <Button
                   variant="ghost"
-                  className="w-full select-none items-center text-sm outline-none"
+                  className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
                 >
                   Create Account
                 </Button>
               </CreateAccountDrawer>
             </SelectContent>
           </Select>
-
           {errors.accountId?.message && typeof errors.accountId.message === "string" && (
             <p className="text-sm text-red-500">{errors.accountId.message}</p>
           )}
@@ -268,7 +257,6 @@ const AddTransactionForm = ({
             />
           </PopoverContent>
         </Popover>
-        
         {errors.date?.message && typeof errors.date.message === "string" && (
           <p className="text-sm text-red-500">{errors.date.message}</p>
         )}
@@ -346,9 +334,6 @@ const AddTransactionForm = ({
           )}
         </Button>
       </div>
-
     </form>
-  )
+  );
 }
-
-export default AddTransactionForm
